@@ -1,0 +1,25 @@
+# Эхо — реестр реле (relay registry). Формат строки:
+#   <libp2p-multiaddr> [владелец]
+# «владелец»: default = наш сервер; ЛЮБАЯ другая метка (например peer:vao) = узел друга.
+# Приложение перебирает адреса, УЗЛЫ ДРУЗЕЙ — В ПРИОРИТЕТЕ перед default (цель: реле —
+# крайний случай, узел круга ближе и разгружает сервер). Первый успешно подключённый
+# становится основным. Обновляй ЭТОТ файл при добавлении/смене узла — приложение подхватит
+# список без пересборки (никакого зашитого IP). Строки с # и пустые — игнорируются.
+# IPv6 first — modern cellular is often IPv6-only and can't reach the IPv4 address at all. The relay
+# listens dual-stack on the SAME port 4001, so a v6-only phone connects here directly.
+/ip6/2a03:6f00:a::2:1f5d/udp/4001/quic-v1/p2p/12D3KooWK2M6pWojUjJVAyRg6e54dzKM93qkZYLPyzWh7WFMDYfo default
+/ip4/217.199.252.199/udp/4001/quic-v1/p2p/12D3KooWK2M6pWojUjJVAyRg6e54dzKM93qkZYLPyzWh7WFMDYfo default
+# TCP fallback — cellular carriers and many VPNs/firewalls silently drop UDP, so QUIC never
+# completes ("реле active 0/N — сеть блокирует QUIC/UDP"). TCP almost always passes; the relay
+# listens on TCP at the SAME port 4001. Clients try all addresses and keep whichever connects.
+/ip4/217.199.252.199/tcp/4001/p2p/12D3KooWK2M6pWojUjJVAyRg6e54dzKM93qkZYLPyzWh7WFMDYfo default
+# IPv6 TCP fallback — a v6-only phone (modern cellular) on a UDP-blocking network had NO path before:
+# v4 is unreachable, and the v6 entry above is QUIC-only. The relay listens dual-stack on TCP
+# [::]:4001, so this one line covers v6-only AND UDP-blocked at the same time.
+/ip6/2a03:6f00:a::2:1f5d/tcp/4001/p2p/12D3KooWK2M6pWojUjJVAyRg6e54dzKM93qkZYLPyzWh7WFMDYfo default
+# Port 443 endpoint — strict networks (corporate Wi-Fi, some carriers/VPNs) block the non-standard
+# 4001 outright. A netfilter REDIRECT on the box sends the ALIAS IP's :443 → the relay's 4001, so
+# port 443 (which passes almost everywhere) reaches the same node. coxot.ru keeps :443 on the MAIN
+# IP — untouched. (Port-block bypass; deep-DPI networks may still see it isn't real TLS.)
+/ip4/217.199.252.199/tcp/443/p2p/12D3KooWK2M6pWojUjJVAyRg6e54dzKM93qkZYLPyzWh7WFMDYfo default
+/ip6/2a03:6f00:a::2:1f5d/tcp/443/p2p/12D3KooWK2M6pWojUjJVAyRg6e54dzKM93qkZYLPyzWh7WFMDYfo default
